@@ -1,18 +1,14 @@
 import discord
 from discord.ext import commands
 from random import choice
-import requests
-import json
 from dotenv import load_dotenv
 import os
-from googletrans import Translator
+
 
 translator = Translator()
 
 
 load_dotenv()
-
-api_key = os.getenv('NEWSAPI_KEY')
 
 
 class Miscellaneous(commands.Cog):
@@ -47,26 +43,10 @@ class Miscellaneous(commands.Cog):
         vEmbed.set_author(name="Indiance#2326")
         await ctx.send(embed=vEmbed)
 
-    @commands.command(name="topnews", pass_context=True, help="Find the top news of a country")
-    async def topnews(self, ctx, country: str = None, count: int = None):
-        if country is None:
-            return await ctx.send("Please provide a country.")
-        if count is None:
-            return await ctx.send("Please provide some number of articles")
-        url = f"https://newsapi.org/v2/top-headlines?country={country.lower()}&apiKey={api_key}"
-        responses = requests.get(url)
-        articles = json.loads(responses.text)
-        i = 1
-        for article in articles['articles']:
-            nEmbed = discord.Embed(
-                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=discord.Colour.blurple())
-            nEmbed.set_author(name=article['author'])
-            nEmbed.set_image(url=article['urlToImage'])
-            await ctx.send(embed=nEmbed)
-            if i < count:
-                i += 1
-            else:
-                break
+    @commands.command(name='shutdown', pass_context=True, help="Shutdown the bot")
+    @commands.is_owner()
+    async def shutdown(self, ctx):
+        await ctx.bot.logout()
 
 
 def setup(bot):
