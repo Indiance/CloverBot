@@ -8,11 +8,13 @@ import os
 
 load_dotenv()
 
+translator = Translator()
+
 api_key = os.getenv('NEWSAPI_KEY')
 
 
 class News(commands.Cog):
-    def __init__:
+    def __init__(self):
         self.bot = bot
 
     @commands.command(name="topnews", pass_context=True, help="Find the top news of a country")

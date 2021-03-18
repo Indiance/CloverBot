@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 import os
 
 
-translator = Translator()
-
-
 load_dotenv()
 
 
