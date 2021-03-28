@@ -1,0 +1,11 @@
+*.db-journal
+__pycache__
+.vscode
+.mypy_cache
+openjdk-13.0.2_linux-x64_bin
+Pipfile
+Pipfile.lock
+Lavalink.jar
+application.yml
+/logs/
+/discordbot/
