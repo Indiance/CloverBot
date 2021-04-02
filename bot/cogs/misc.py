@@ -102,60 +102,122 @@ class Miscellaneous(commands.Cog):
 
     @help.command()
     async def kick(self, ctx):
-        kEm = discord.Embed(title="Kick",
+        em = discord.Embed(title="Kick",
                             description="kick a member from the server",
                             color=ctx.author.color)
-        kEm.add_field(name="**Syntax**", value="+kick <member> [reason]")
-        await ctx.send(embed=kEm)
+        em.add_field(name="**Syntax**", value="+kick <member> [reason]")
+        await ctx.send(embed=em)
 
     @help.command()
     async def ban(self, ctx):
-        bEm = discord.Embed(title="Ban",
+        em = discord.Embed(title="Ban",
                             description="Ban a member from the server",
                             color=ctx.author.color)
-        bEm.add_field(name="**Syntax**", value="+ban <member> [reason]")
-        await ctx.send(embed=bEm)
+        em.add_field(name="**Syntax**", value="+ban <member> [reason]")
+        await ctx.send(embed=em)
 
     @help.command()
     async def unban(self, ctx):
-        uEm = discord.Embed(title="Unban",
+        em = discord.Embed(title="Unban",
                             description="Unban a member from the server",
                             color=ctx.author.color)
-        uEm.add_field(name="**Syntax**",value="+unban <member>#<discriminator>")
-        await ctx.send(embed=uEm)
-        
+        em.add_field(name="**Syntax**",
+                      value="+unban <member>#<discriminator>")
+        await ctx.send(embed=em)
+
     @help.command()
     async def warn(self, ctx):
-    	wEm = discord.Embed(title="Warn",
-    	description="Unban a member from the server",
-    	color=ctx.author.color)
-    	wEm.add_field(name="**Syntax**", value="+warn <member> [reason]")
-    	await ctx.send(embed=wEm)
-    
+        wEm = discord.Embed(title="Warn",
+                            description="Unban a member from the server",
+                            color=ctx.author.color)
+        wEm.add_field(name="**Syntax**", value="+warn <member> [reason]")
+        await ctx.send(embed=wEm)
+
     @help.command()
     async def warnings(self, ctx):
-    	waEm = discord.Embed(title="Warnings",
-    	description="Show the warnings that a member has",
-    	color=ctx.author.color)
-    	waEm.add_field(name="**Syntax**",value="+warnings <member>")
-    
+        em = discord.Embed(title="Warnings",
+                             description="Show the warnings that a member has",
+                             color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+warnings <member>")
+        await ctx.send(embed=em)
+
     @help.command()
     async def clearwarns(self, ctx):
-    	cwEm = discord.Embed(title="Clearwarns",
-    	description="Clear the warnings that a user has",
-    	color=ctx.author.color)
-    	cwEm.add_field(name="**Syntax**",value="+clearwarns <member>")
-    
-    @help.command()
-    async def 8ball(self, ctx):
-    	em = discord.Embed(title="8ball", 
-    	description="Answer your questions using the 8ball.",
-    	color=ctx.author.color)
-    	em.add_field(name="**Syntax**",value="+8ball <question>")
-    
-    @help.command()
-    async def 
+        em = discord.Embed(title="Clearwarns",
+                             description="Clear the warnings that a user has",
+                             color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+clearwarns <member>")
+        await ctx.send(embed=em)
 
+    @help.command(name="8ball")
+    async def _8ball(self, ctx):
+        em = discord.Embed(title="8ball",
+                           description="Answer your questions using the 8ball.",
+                           color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+8ball <question>")
+        await ctx.send(embed=em)
+
+    @help.command(name="invert")
+    async def help_invert(self, ctx):
+        em = discord.Embed(
+            title="Invert", description="Invert a person's avatar", color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+invert [member]")
+        await ctx.send(embed=em)
+
+    @help.command(name="Pixelate")
+    async def help_wasted(self, ctx):
+        em = discord.Embed(
+            title="Pixelate", description="Pixelate someone's profile picture", color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+pixelate [member]")
+        await ctx.send(embed=em)
+
+    @help.command(name="meme")
+    async def reddit_meme(self, ctx):
+        em = discord.Embed(
+            title="Meme", description="Take a random meme from reddit", color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+meme")
+        await ctx.send(embed=em)
+
+    @help.command(name="randompost")
+    async def reddit_randompost(self, ctx):
+        em = discord.Embed(
+            title="random post", description="obtain a random post from reddit given a subreddit name", color=ctx.author.color)
+        em.add_field(name="**syntax**", value="+randompost <subreddit>")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def countrynews(self, ctx):
+        em = discord.Embed(
+            title="Countrynews", description="Pick some news from a country. The country name should be two letters", color=ctx.author.color)
+        em.add_field(name="**syntax**",
+                     value="+countrynews <country> <number of articles>")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def topicnews(self, ctx):
+        em = discord.Embed(
+            name="Topic news", description="Get some news from various sources given a topic", color=ctx.author.color)
+        em.add_field(name="**Syntax**",
+                     value="+topicnews <topic> <number of articles>")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def connect(self, ctx):
+        em = discord.Embed(
+            title="Connect", description="Join a voice channel", color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+connect [voice channel name]")
+        await ctx.send(embed=em)
+    
+    @help.command()
+    async def play(self, ctx):
+        em = discord.Embed(title="Play", description="Play a song", color=ctx.author.color)
+        em.add_field(name="**Syntax**",value="+play <song name> or +play <url>")
+        await ctx.send(embed=em)
+    
+    async def queue(self, ctx):
+        em = discord.Embed(title="Queue", description="Show the queue in a song", color=ctx.author.color)
+        em.add_field(name="**Syntax",value="+queue")
+        await ctx.send(embed=em)
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))
