@@ -3,8 +3,8 @@ import datetime as dt
 from re import match
 from typing import Optional
 from discord import Embed, DMChannel, Guild, VoiceChannel
-from discord.ext.commands import CommandErrror, Cog
-from wavelink import Player, WavelinkMixin
+from discord.ext.commands import Cog, CommandError
+from wavelink import Player, WavelinkMixin, TrackPlaylist, Client
 from discord.ext import commands
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 OPTIONS = {
@@ -16,33 +16,33 @@ OPTIONS = {
 }
 
 
-class AlreadyConnectedToChannel(CommandErrror):
+class AlreadyConnectedToChannel(CommandError):
     pass
 
 
-class NoVoiceChannel(CommandErrror):
+class NoVoiceChannel(CommandError):
     pass
 
 
-class QueueIsEmpty(CommandErrror):
+class QueueIsEmpty(CommandError):
     pass
 
 
-class NoTracksFound(CommandErrror):
+class NoTracksFound(CommandError):
     pass
 
 
-class PlayerIsAlreadyPaused(CommandErrror):
+class PlayerIsAlreadyPaused(CommandError):
     pass
 
 
-class PlayerIsAlreadyPlaying(CommandErrror):
+class PlayerIsAlreadyPlaying(CommandError):
     pass
 
-class NoMoreTracks(CommandErrror):
+class NoMoreTracks(CommandError):
     pass
 
-class NoPreviousTracks(CommandErrror):
+class NoPreviousTracks(CommandError):
     pass
 
 class Queue:
@@ -119,7 +119,7 @@ class Player(Player):
     async def add_tracks(self, ctx, tracks):
         if not tracks:
             raise NoTracksFound
-        if isinstance(tracks, wavelink.TrackPlaylist):
+        if isinstance(tracks, TrackPlaylist):
             self.queue.add(*tracks.tracks)
         elif len(tracks) == 1:
             self.queue.add(tracks[0])
@@ -178,7 +178,7 @@ class Player(Player):
 class Music(Cog, WavelinkMixin):
     def __init__(self, bot):
         self.bot = bot
-        self.wavelink = wavelink.Client(bot=bot)
+        self.wavelink = Client(bot=bot)
         self.bot.loop.create_task(self.start_nodes())
 
     @commands.Cog.listener()

@@ -1,7 +1,7 @@
 # discord Imports
 import discord
 from discord import Embed, Member, File
-from discord.ext.commands import command, Cog, group
+from discord.ext.commands import command, Cog, group, is_owner
 #other imports
 from random import choice
 from dotenv import load_dotenv

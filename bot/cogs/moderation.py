@@ -1,4 +1,4 @@
-from discord.ext.commands import Cog, command
+from discord.ext.commands import Cog, command, has_permissions, CommandError
 from discord import Member, Embed, Game, Color
 from aiofiles import open
 
@@ -40,7 +40,7 @@ class Moderation(Cog):
         bot_warnings[guild.id] = {}
 
     @command(name='kick', pass_context=True, help='kick a user')
-    @commands.has_permissions(kick_members=True)
+    @has_permissions(kick_members=True)
     async def kick(self, ctx, member: Member = None, *reason):
         if reason is None:
             return await ctx.send("Please provide a valid reason for kicking the member")
@@ -54,7 +54,7 @@ class Moderation(Cog):
             await ctx.send(f"{member.mention} has been kicked from the server {ctx.guild.name} for {true_reason}")
 
     @command(name='ban', pass_context=True, help='ban a user')
-    @commands.has_permissions(ban_members=True)
+    @has_permissions(ban_members=True)
     async def ban(self, ctx, member: Member = None, *reason):
         if reason is None:
             return await ctx.send("Please provide a valid reason")
@@ -67,7 +67,7 @@ class Moderation(Cog):
             await ctx.send(f"{member.mention} has been banned from the server.")
 
     @command(name='unban', pass_context=True, help='unban a user')
-    @commands.has_permissions(ban_members=True)
+    @has_permissions(ban_members=True)
     async def unban(self, ctx, *, member):
         banned_users = await ctx.guild.bans()
         member_name, member_disc = member.split('#')
@@ -78,7 +78,7 @@ class Moderation(Cog):
                 await ctx.send(f"{user} was unbanned")
 
     @command(name='warn', pass_context=True, help='warn the user')
-    @commands.has_permissions(kick_members=True)
+    @has_permissions(kick_members=True)
     async def warn(self, ctx, member: Member = None, reason=None):
         if member is None:
             return await ctx.send("The member you have provided is not found or you have not provided a member.")
