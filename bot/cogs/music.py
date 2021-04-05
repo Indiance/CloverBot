@@ -1,9 +1,10 @@
-import asyncio
+from asyncio import TimeoutError
 import datetime as dt
-import re
-import typing as t
-import discord
-import wavelink
+from re import match
+from typing import Optional
+from discord import Embed, DMChannel, Guild, VoiceChannel
+from discord.ext.commands import CommandErrror, Cog
+from wavelink import Player, WavelinkMixin
 from discord.ext import commands
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 OPTIONS = {
@@ -15,33 +16,33 @@ OPTIONS = {
 }
 
 
-class AlreadyConnectedToChannel(commands.CommandError):
+class AlreadyConnectedToChannel(CommandErrror):
     pass
 
 
-class NoVoiceChannel(commands.CommandError):
+class NoVoiceChannel(CommandErrror):
     pass
 
 
-class QueueIsEmpty(commands.CommandError):
+class QueueIsEmpty(CommandErrror):
     pass
 
 
-class NoTracksFound(commands.CommandError):
+class NoTracksFound(CommandErrror):
     pass
 
 
-class PlayerIsAlreadyPaused(commands.CommandError):
+class PlayerIsAlreadyPaused(CommandErrror):
     pass
 
 
-class PlayerIsAlreadyPlaying(commands.CommandError):
+class PlayerIsAlreadyPlaying(CommandErrror):
     pass
 
-class NoMoreTracks(commands.CommandError):
+class NoMoreTracks(CommandErrror):
     pass
 
-class NoPreviousTracks(commands.CommandError):
+class NoPreviousTracks(CommandErrror):
     pass
 
 class Queue:
@@ -96,7 +97,7 @@ class Queue:
         self._queue.clear()
 
 
-class Player(wavelink.Player):
+class Player(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.queue = Queue()
@@ -137,7 +138,7 @@ class Player(wavelink.Player):
                 and u == ctx.author
                 and r.message.id == msg.id
             )
-        embed = discord.Embed(
+        embed = Embed(
             title="Choose a song",
             description=(
                 "\n".join(
@@ -156,7 +157,7 @@ class Player(wavelink.Player):
             await msg.add_reaction(emoji)
         try:
             reaction, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=_check)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             await msg.delete()
             await ctx.message.delete()
         else:
@@ -174,7 +175,7 @@ class Player(wavelink.Player):
             pass
 
 
-class Music(commands.Cog, wavelink.WavelinkMixin):
+class Music(Cog, WavelinkMixin):
     def __init__(self, bot):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
@@ -186,18 +187,18 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             if not [m for m in before.channel.members if not m.bot]:
                 await self.get_player(member.guild).teardown()
 
-    @wavelink.WavelinkMixin.listener()
+    @WavelinkMixin.listener()
     async def on_node_ready(self, node):
         print(f" Wavelink node `{node.identifier}` ready.")
 
-    @wavelink.WavelinkMixin.listener("on_track_stuck")
-    @wavelink.WavelinkMixin.listener("on_track_end")
-    @wavelink.WavelinkMixin.listener("on_track_exception")
+    @WavelinkMixin.listener("on_track_stuck")
+    @WavelinkMixin.listener("on_track_end")
+    @WavelinkMixin.listener("on_track_exception")
     async def on_player_stop(self, node, payload):
         await payload.player.advance()
 
     async def cog_check(self, ctx):
-        if isinstance(ctx.channel, discord.DMChannel):
+        if isinstance(ctx.channel, DMChannel):
             await ctx.send("Music commands are not available in DMs.")
             return False
         return True
@@ -220,11 +221,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     def get_player(self, obj):
         if isinstance(obj, commands.Context):
             return self.wavelink.get_player(obj.guild.id, cls=Player, context=obj)
-        elif isinstance(obj, discord.Guild):
+        elif isinstance(obj, Guild):
             return self.wavelink.get_player(obj.id, cls=Player)
 
     @commands.command(name="connect", aliases=["join"])
-    async def connect_command(self, ctx, *, channel: t.Optional[discord.VoiceChannel]):
+    async def connect_command(self, ctx, *, channel: Optional[VoiceChannel]):
         player = self.get_player(ctx)
         channel = await player.connect(ctx, channel)
         await ctx.send(f"Connected to {channel.name}.")
@@ -240,10 +241,10 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     async def disconnect_command(self, ctx):
         player = self.get_player(ctx)
         await player.teardown()
-        await ctx.send("Disconnected from channel")
+        await ctx.send("Disconnected from voice")
 
     @commands.command(name="play")
-    async def play_command(self, ctx, *, query: t.Optional[str]):
+    async def play_command(self, ctx, *, query: Optional[str]):
         player = self.get_player(ctx)
         if not player.is_connected:
             await player.connect(ctx)
@@ -258,7 +259,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             await ctx.send("Playback resumed")
         else:
             query = query.strip("<>")
-            if not re.match(URL_REGEX, query):
+            if not match(URL_REGEX, query):
                 query = f"ytsearch:{query}"
             await player.add_tracks(ctx, await self.wavelink.get_tracks(query))
 
@@ -305,20 +306,20 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         await ctx.send("Player has been stopped")
 
     @commands.command(name="queue", pass_context=True, help="Show the queue the playlist")
-    async def queue_command(self, ctx, show: t.Optional[int] = 10):
+    async def queue_command(self, ctx, show: Optional[int] = 10):
         player = self.get_player(ctx)
         if player.queue.is_empty:
             raise QueueIsEmpty
-        embed = discord.Embed(
+        embed = Embed(
             title="Queue",
             description=f"Showing next [show] tracks",
             colour=ctx.author.colour,
             timestamp=dt.datetime.utcnow()
         )
-        qEmbed.set_author(name="Query Results")
-        qEmbed.set_footer(
+        embed.set_author(name="Query Results")
+        embed.set_footer(
             text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-        qEmbed.add_field(name="Currently Playing: ",
+        embed.add_field(name="Currently Playing: ",
                          value=player.queue.current_track.title, inline=False)
         if upcoming := player.queue.upcoming:
             embed.add_field(

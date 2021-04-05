@@ -1,25 +1,25 @@
-import discord
-from discord.ext import commands
-import aiofiles
+from discord.ext.commands import Cog, command
+from discord import Member, Embed, Game, Color
+from aiofiles import open
 
 bot_warnings = {}
 
 
-class Moderation(commands.Cog):
+class Moderation(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_ready(self):
-        game = discord.Game('+help')
+        game = Game('+help')
         await self.bot.change_presence(activity=game)
         for guild in self.bot.guilds:
-            async with aiofiles.open(f"{guild.id}.txt", mode="a") as temp:
+            async with open(f"{guild.id}.txt", mode="a") as temp:
                 pass
             bot_warnings[guild.id] = {}
 
         for guild in self.bot.guilds:
-            async with aiofiles.open(f"{guild.id}.txt", mode="r") as file:
+            async with open(f"{guild.id}.txt", mode="r") as file:
                 lines = await file.readlines()
 
                 for line in lines:
@@ -35,13 +35,13 @@ class Moderation(commands.Cog):
                         bot_warnings[guild.id][member_id] = [
                             1, [(admin_id, reason)]]
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_guild_join(self, guild):
         bot_warnings[guild.id] = {}
 
-    @commands.command(name='kick', pass_context=True, help='kick a user')
+    @command(name='kick', pass_context=True, help='kick a user')
     @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, member: discord.Member = None, *reason):
+    async def kick(self, ctx, member: Member = None, *reason):
         if reason is None:
             return await ctx.send("Please provide a valid reason for kicking the member")
         true_reason = ' '.join(reason)
@@ -53,9 +53,9 @@ class Moderation(commands.Cog):
             await member.kick(reason=true_reason)
             await ctx.send(f"{member.mention} has been kicked from the server {ctx.guild.name} for {true_reason}")
 
-    @commands.command(name='ban', pass_context=True, help='ban a user')
+    @command(name='ban', pass_context=True, help='ban a user')
     @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, member: discord.Member = None, *reason):
+    async def ban(self, ctx, member: Member = None, *reason):
         if reason is None:
             return await ctx.send("Please provide a valid reason")
         if member == ctx.author:
@@ -66,7 +66,7 @@ class Moderation(commands.Cog):
             await member.ban(reason=reason)
             await ctx.send(f"{member.mention} has been banned from the server.")
 
-    @commands.command(name='unban', pass_context=True, help='unban a user')
+    @command(name='unban', pass_context=True, help='unban a user')
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, *, member):
         banned_users = await ctx.guild.bans()
@@ -77,9 +77,9 @@ class Moderation(commands.Cog):
                 await ctx.guild.unban(user)
                 await ctx.send(f"{user} was unbanned")
 
-    @commands.command(name='warn', pass_context=True, help='warn the user')
+    @command(name='warn', pass_context=True, help='warn the user')
     @commands.has_permissions(kick_members=True)
-    async def warn(self, ctx, member: discord.Member = None, reason=None):
+    async def warn(self, ctx, member: Member = None, reason=None):
         if member is None:
             return await ctx.send("The member you have provided is not found or you have not provided a member.")
 
@@ -101,18 +101,18 @@ class Moderation(commands.Cog):
 
         count = bot_warnings[ctx.guild.id][member.id][0]
 
-        async with aiofiles.open(f"{member.guild.id}.txt", mode="a") as file:
+        async with open(f"{member.guild.id}.txt", mode="a") as file:
             await file.write(f"{member.id} {ctx.author.id} {reason}\n")
 
         await ctx.send(f"{member.mention} has {count} {'warning' if first_warning else 'warnings'}.")
 
-    @commands.command(name='warnings', pass_context=True, help='show the warnings of a person')
-    async def warnings(self, ctx, member: discord.Member = None):
+    @command(name='warnings', pass_context=True, help='show the warnings of a person')
+    async def warnings(self, ctx, member: Member = None):
         if member is None:
             await ctx.send("The member you have provided is not found or you have not provided a vallid member.")
 
-        warnEmbed = discord.Embed(
-            title=f"Displaying Warnings for {member.name}", description="", colour=discord.Colour.red())
+        warnEmbed = Embed(
+            title=f"Displaying Warnings for {member.name}", description="", colour=Colour.red())
 
         try:
             i = 1
@@ -124,8 +124,8 @@ class Moderation(commands.Cog):
         except KeyError:
             await ctx.send("This member has no warnings")
 
-    @commands.command(name='clearwarns', pass_context=True, help='clear the warnings of a person')
-    async def clearwarns(self, ctx, member: discord.Member = None):
+    @command(name='clearwarns', pass_context=True, help='clear the warnings of a person')
+    async def clearwarns(self, ctx, member: Member = None):
         if member is None:
             return await ctx.send("The member you have provided is invalid or you have not provided one")
         try:
