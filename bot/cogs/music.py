@@ -35,13 +35,14 @@ class PlayerIsAlreadyPaused(commands.CommandError):
     pass
 
 
+class PlayerIsAlreadyPlaying(commands.CommandError):
+    pass
+
 class NoMoreTracks(commands.CommandError):
     pass
 
-
 class NoPreviousTracks(commands.CommandError):
     pass
-
 
 class Queue:
     def __init__(self):
@@ -239,7 +240,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     async def disconnect_command(self, ctx):
         player = self.get_player(ctx)
         await player.teardown()
-        await ctx.send("Disconnect.")
+        await ctx.send("Disconnected from channel")
 
     @commands.command(name="play")
     async def play_command(self, ctx, *, query: t.Optional[str]):
@@ -247,10 +248,14 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_connected:
             await player.connect(ctx)
         if query is None:
+            if not player.is_paused:
+                raise PlayersIsAlreadyPlaying
+
             if player.queue.is_empty:
                 raise QueueIsEmpty
+
             await player.set_pause(False)
-            await ctx.send("Playback resumed.")
+            await ctx.send("Playback resumed")
         else:
             query = query.strip("<>")
             if not re.match(URL_REGEX, query):
@@ -259,82 +264,62 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
 
     @play_command.error
     async def play_command_error(self, ctx, exc):
-        if isinstance(exc, PlayerIsAlreadyPlaying):
-            await ctx.send("Already playing.")
-        elif isinstance(exc, QueueIsEmpty):
-            await ctx.send("No songs to play as the queue is empty.")
+        if isinstance(exc, NoTracksFound):
+            await ctx.send("No tracks were found for this")
 
     @commands.command(name="pause")
-    async def pause_command(self, ctx):
+    async def pause(self, ctx):
         player = self.get_player(ctx)
         if player.is_paused:
             raise PlayerIsAlreadyPaused
-        await player.set_pause(True)
-        await ctx.send("Playback paused.")
 
-    @pause_command.error
-    async def pause_command_error(self, ctx, exc):
+        await player.set_pause(True)
+        await ctx.send("Playback paused")
+
+    @pause.error
+    async def pause__error(ctx, exc):
         if isinstance(exc, PlayerIsAlreadyPaused):
-            await ctx.send("Already paused.")
+            await ctx.send("Player has already been paused")
+
+
+    @commands.command(name="resume")
+    async def resume(self, ctx):
+        player = self.get_player(ctx)
+
+        if player.is_playing:
+            raise PlayerIsAlreadyPlaying
+
+        await player.set_pause(False)
+        await ctx.send("Playback resumed")
+
+    @resume.error
+    async def resume_command_error(self, ctx, exc):
+        if isinstance(exc, PlayerIsAlreadyPlaying):
+            await ctx.send("Player is already playing")
 
     @commands.command(name="stop")
     async def stop_command(self, ctx):
-        player = self.get_player(ctx)
+        player = self.get_player
         player.queue.empty()
         await player.stop()
-        await ctx.send("Playback stopped.")
+        await ctx.send("Player has been stopped")
 
-    @commands.command(name="next", aliases=["skip"])
-    async def next_command(self, ctx):
-        player = self.get_player(ctx)
-
-        if not player.queue.upcoming:
-            raise NoMoreTracks
-
-        await player.stop()
-        await ctx.send("Playing next track in queue.")
-
-    @next_command.error
-    async def next_command_error(self, ctx, exc):
-        if isinstance(exc, QueueIsEmpty):
-            await ctx.send("This could not be executed as the queue is currently empty.")
-        elif isinstance(exc, NoMoreTracks):
-            await ctx.send("There are no more tracks in the queue.")
-
-    @commands.command(name="previous")
-    async def previous_command(self, ctx):
-        player = self.get_player(ctx)
-
-        if not player.queue.history:
-            raise NoPreviousTracks
-
-        player.queue.position -= 2
-        await player.stop()
-        await ctx.send("Playing previous track in queue.")
-
-    @previous_command.error
-    async def previous_command_error(self, ctx, exc):
-        if isinstance(exc, QueueIsEmpty):
-            await ctx.send("This could not be executed as the queue is currently empty.")
-        elif isinstance(exc, NoPreviousTracks):
-            await ctx.send("There are no previous tracks in the queue.")
-
-    @commands.command(name="queue")
+    @commands.command(name="queue", pass_context=True, help="Show the queue the playlist")
     async def queue_command(self, ctx, show: t.Optional[int] = 10):
         player = self.get_player(ctx)
         if player.queue.is_empty:
             raise QueueIsEmpty
         embed = discord.Embed(
             title="Queue",
-            description=f"Showing up to next {show} tracks",
+            description=f"Showing next [show] tracks",
             colour=ctx.author.colour,
             timestamp=dt.datetime.utcnow()
         )
-        embed.set_author(name="Query Results")
-        embed.set_footer(
+        qEmbed.set_author(name="Query Results")
+        qEmbed.set_footer(
             text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-        embed.add_field(name="Currently playing",
-                        value=player.queue.current_track.title, inline=False)
+        qEmbed.add_field(name="Currently Playing: ",
+                         value=player.queue.current_track.title, inline=False)
         if upcoming := player.queue.upcoming:
             embed.add_field(
                 name="Next up",
@@ -348,6 +333,42 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if isinstance(exc, QueueIsEmpty):
             await ctx.send("The queue is currently empty.")
 
+
+
+    @commands.command(name="next", aliases=['skip'])
+    async def next(self, ctx):
+        player = self.get_player(ctx)
+
+        if not player.queue.upcoming:
+            raise NoMoreTracks
+
+        await player.stop()
+        await ctx.send("The next track is playing now")
+
+    @next.error
+    async def next_error(self, ctx, exc):
+        if isinstance(ctx, NoMoreTracks):
+            await ctx.send("There are no more tracks in the queue")
+        if isinstance(ctx, QueueIsEmpty):
+            await ctx.send("The queue is empty")
+
+    @commands.command(name="previous", aliases=['back'])
+    async def back(self, ctx):
+        player = self.get_player(ctx)
+
+        if not player.queue.history:
+            raise NoPreviousTracks
+
+        player.queue_position -= 2
+        await player.stop()
+        await ctx.send("Playing the previous song in the queue")
+
+    @back.error
+    async def next_error(self, ctx, exc):
+        if isinstance(ctx, NoMoreTracks):
+            await ctx.send("There are no previous tracks in the queue")
+        if isinstance(ctx, QueueIsEmpty):
+            await ctx.send("The queue is empty")
 
 def setup(bot):
     bot.add_cog(Music(bot))
