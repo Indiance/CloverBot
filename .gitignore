@@ -1,0 +1,9 @@
+*.txt
+application.yml
+Lavalink.jar
+__pycache__
+*.pyc
+/logs/
+/venv/
+.DS_Store
+.vscode
