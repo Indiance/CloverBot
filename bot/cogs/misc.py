@@ -2,7 +2,7 @@
 import discord
 from discord import Embed, Member, File
 from discord.ext.commands import command, Cog, group, is_owner
-#other imports
+# other imports
 from random import choice
 from dotenv import load_dotenv
 <<<<<<< HEAD
@@ -160,7 +160,7 @@ class Miscellaneous(Cog):
                          value="countrynews, topicnews",
                          inline=False)
         hEmbed.add_field(name=":headphones: Music",
-                         value="connect, disconnect, play, queue",
+                         value="connect, disconnect, play, queue, pause, stop",
                          inline=False)
         await ctx.send(embed=hEmbed)
 
@@ -363,6 +363,20 @@ class Miscellaneous(Cog):
                    color=ctx.author.color)
         em.add_field(name="**Syntax**",
                      value="+play <song name> or +play <url>")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def pause(self, ctx):
+        em = Embed(title="Pause", description="Pause the song",
+                   color=ctx.author.color)
+        em.add_fiel(name="**Syntax**", value="+pause")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def stop(self, ctx):
+        em = Embed(
+            title="Stop", description="Stop the player and empty the queue", color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+stop")
         await ctx.send(embed=em)
 
     async def queue(self, ctx):
