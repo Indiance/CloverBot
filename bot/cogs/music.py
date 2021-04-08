@@ -1,17 +1,10 @@
 from asyncio import TimeoutError
 import datetime as dt
-<<<<<<< HEAD
-import re
-import typing as t
-import discord
-import wavelink
-=======
 from re import match
 from typing import Optional
 from discord import Embed, DMChannel, Guild, VoiceChannel
 from discord.ext.commands import Cog, CommandError
 from wavelink import Player, WavelinkMixin, TrackPlaylist, Client
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
 from discord.ext import commands
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 OPTIONS = {
@@ -27,31 +20,6 @@ class AlreadyConnectedToChannel(CommandError):
     pass
 
 
-<<<<<<< HEAD
-class NoVoiceChannel(commands.CommandError):
-    pass
-
-
-class QueueIsEmpty(commands.CommandError):
-    pass
-
-
-class NoTracksFound(commands.CommandError):
-    pass
-
-
-class PlayerIsAlreadyPaused(commands.CommandError):
-    pass
-
-
-class PlayerIsAlreadyPlaying(commands.CommandError):
-    pass
-
-class NoMoreTracks(commands.CommandError):
-    pass
-
-class NoPreviousTracks(commands.CommandError):
-=======
 class NoVoiceChannel(CommandError):
     pass
 
@@ -75,7 +43,6 @@ class NoMoreTracks(CommandError):
     pass
 
 class NoPreviousTracks(CommandError):
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
     pass
 
 class Queue:
@@ -130,11 +97,7 @@ class Queue:
         self._queue.clear()
 
 
-<<<<<<< HEAD
-class Player(wavelink.Player):
-=======
 class Player(Player):
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.queue = Queue()
@@ -175,11 +138,7 @@ class Player(Player):
                 and u == ctx.author
                 and r.message.id == msg.id
             )
-<<<<<<< HEAD
-        embed = discord.Embed(
-=======
         embed = Embed(
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
             title="Choose a song",
             description=(
                 "\n".join(
@@ -216,11 +175,7 @@ class Player(Player):
             pass
 
 
-<<<<<<< HEAD
-class Music(commands.Cog, wavelink.WavelinkMixin):
-=======
 class Music(Cog, WavelinkMixin):
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
     def __init__(self, bot):
         self.bot = bot
         self.wavelink = Client(bot=bot)
@@ -232,15 +187,6 @@ class Music(Cog, WavelinkMixin):
             if not [m for m in before.channel.members if not m.bot]:
                 await self.get_player(member.guild).teardown()
 
-<<<<<<< HEAD
-    @wavelink.WavelinkMixin.listener()
-    async def on_node_ready(self, node):
-        print(f" Wavelink node `{node.identifier}` ready.")
-
-    @wavelink.WavelinkMixin.listener("on_track_stuck")
-    @wavelink.WavelinkMixin.listener("on_track_end")
-    @wavelink.WavelinkMixin.listener("on_track_exception")
-=======
     @WavelinkMixin.listener()
     async def on_node_ready(self, node):
         print(f" Wavelink node `{node.identifier}` ready.")
@@ -248,7 +194,6 @@ class Music(Cog, WavelinkMixin):
     @WavelinkMixin.listener("on_track_stuck")
     @WavelinkMixin.listener("on_track_end")
     @WavelinkMixin.listener("on_track_exception")
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
     async def on_player_stop(self, node, payload):
         await payload.player.advance()
 
@@ -296,11 +241,7 @@ class Music(Cog, WavelinkMixin):
     async def disconnect_command(self, ctx):
         player = self.get_player(ctx)
         await player.teardown()
-<<<<<<< HEAD
-        await ctx.send("Disconnected from channel")
-=======
         await ctx.send("Disconnected from voice")
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
 
     @commands.command(name="play")
     async def play_command(self, ctx, *, query: Optional[str]):
@@ -359,25 +300,12 @@ class Music(Cog, WavelinkMixin):
 
     @commands.command(name="stop")
     async def stop_command(self, ctx):
-<<<<<<< HEAD
-        player = self.get_player(ctx)
-=======
         player = self.get_player
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
         player.queue.empty()
         await player.stop()
         await ctx.send("Player has been stopped")
 
     @commands.command(name="queue", pass_context=True, help="Show the queue the playlist")
-<<<<<<< HEAD
-    async def queue_command(self, ctx, show: t.Optional[int] = 10):
-        player = self.get_player(ctx)
-        if player.queue.is_empty:
-            raise QueueIsEmpty
-        embed = discord.Embed(
-            title="Queue",
-            description=f"Showing next {show} tracks",
-=======
     async def queue_command(self, ctx, show: Optional[int] = 10):
         player = self.get_player(ctx)
         if player.queue.is_empty:
@@ -385,7 +313,6 @@ class Music(Cog, WavelinkMixin):
         embed = Embed(
             title="Queue",
             description=f"Showing next [show] tracks",
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
             colour=ctx.author.colour,
             timestamp=dt.datetime.utcnow()
         )
@@ -421,15 +348,9 @@ class Music(Cog, WavelinkMixin):
 
     @next.error
     async def next_error(self, ctx, exc):
-<<<<<<< HEAD
-        if isinstance(exc, NoMoreTracks):
-            await ctx.send("There are no more tracks in the queue")
-        if isinstance(exc, QueueIsEmpty):
-=======
         if isinstance(ctx, NoMoreTracks):
             await ctx.send("There are no more tracks in the queue")
         if isinstance(ctx, QueueIsEmpty):
->>>>>>> 0a31baa6c0563891def67bd366fe7f1c639b675c
             await ctx.send("The queue is empty")
 
     @commands.command(name="previous", aliases=['back'])
