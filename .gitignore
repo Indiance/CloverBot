@@ -1,0 +1,11 @@
+__pycache__
+Lavalink.jar
+application.yml
+/logs/
+/clover/
+/venv/
+*.pyc
+*.DS_Store
+*.txt
+.env
+.vscode
