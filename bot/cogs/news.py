@@ -32,7 +32,7 @@ class News(Cog):
 
         for article in articles['articles']:
             nEmbed = Embed(
-                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=discord.Colour.blurple())
+                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=ctx.author.color)
             nEmbed.set_author(name=article['author'])
             nEmbed.set_image(url=article['urlToImage'])
             await ctx.send(embed=nEmbed)
@@ -56,7 +56,7 @@ class News(Cog):
 
         for article in articles['articles']:
             nEmbed = Embed(
-                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=discord.Colour.blurple())
+                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=ctx.author.color)
             nEmbed.set_author(name=article['author'])
             nEmbed.set_image(url=article['urlToImage'])
             await ctx.send(embed=nEmbed)
