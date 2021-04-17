@@ -1,0 +1,10 @@
+*.pyc
+__pycache__
+Lavalink.jar
+.vscode
+application.yml
+.env
+*.txt
+/clover/
+/logs/
+.java-version
