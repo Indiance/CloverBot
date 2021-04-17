@@ -8,7 +8,7 @@ import os
 client_id = os.getenv("REDDIT_APP_ID")
 client_secret = os.getenv("REDDIT_APP_SECRET")
 reddit = Reddit(client_id=client_id, client_secret=client_secret,
-                          user_agent="discord:com.example.CloverBot:1.0 (by u/RedditUser762005)")
+                user_agent="discord:com.example.CloverBot:1.0 (by u/RedditUser762005)")
 
 
 class Reddit(Cog):
