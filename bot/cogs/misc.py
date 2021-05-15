@@ -6,7 +6,9 @@ from discord.ext.commands import command, Cog, group, is_owner
 from random import choice
 from dotenv import load_dotenv
 from aiohttp import ClientSession
+from typing import Optional
 from io import BytesIO
+from datetime import datetime as dt
 
 load_dotenv()
 
@@ -34,7 +36,7 @@ class Miscellaneous(Cog):
     @command(name='shutdown', pass_context=True, help="Shutdown the bot")
     @is_owner()
     async def shutdown(self, ctx):
-        await ctx.bot.logout()
+        await ctx.bot.close()
 
     @command(name='wasted', pass_context=True)
     async def wasted(self, ctx, member: Member = None):
@@ -81,6 +83,41 @@ class Miscellaneous(Cog):
                 await ctx.send(file=File(data, 'pixelated.png'))
                 await invertsession.close()
 
+    @command(name="userinfo", pass_context=True)
+    async def userinfo(self, ctx, member: Optional[Member]):
+        user = member or ctx.author
+        em = Embed(title=f"Showing user information for {user.name}#{user.discriminator}",
+            colour=user.color,
+            description=user.mention,
+            timestamp=dt.utcnow())
+        em.add_field(name="Created at",
+                     value=user.created_at.strftime("%d/%m/%Y %H:%M"))
+        em.add_field(name="Joined server at",
+                     value=user.joined_at.strftime("%d/%m/%Y %H:%M"))
+        mentions = [role.mention for role in user.roles if role.mentionable]
+        em.add_field(name=f"Roles [{len(mentions)}]", value=f"{' '.join(mentions) if mentions else 'None'}", inline=False)
+        em.add_field(name="Top Role", value=user.top_role.mention)
+        em.add_field(name="Status", value=str(user.status).title())
+        em.add_field(name="Activity", value=f"{user.activity.name if user.activity else 'N/A'}")
+        em.add_field(name="Is the user a bot?", value=user.bot)
+        em.set_thumbnail(url=user.avatar_url)
+        await ctx.send(embed=em)
+
+    @command(name="serverinfo", pass_context=True)
+    async def serverinfo(self, ctx):
+        guild = ctx.guild
+        em = Embed(title="Showing information about the server", description=f"Server name: {guild.name}", color=guild.owner.color)
+        em.add_field(name="Date the server was created", value=guild.created_at.strftime("%d/%m/%Y %H:%M"), inline=False)
+        em.add_field(name="Number of members", value=guild.member_count)
+        em.add_field(name="Number of roles", value=len(guild.roles))
+        em.add_field(name="Number of channels", value=len(guild.channels))
+        em.add_field(name="Number of text channels", value=len(guild.text_channels))
+        em.add_field(name="Number of voice channels", value=len(guild.voice_channels))
+        roles = [role.mention for role in guild.roles if role.mentionable]
+        em.add_field(name="Roles in the server", value=f"{' '.join(roles) if roles else 'None'}")
+        em.set_thumbnail(url=guild.icon_url)
+        await ctx.send(embed=em)
+
     @group(invoke_without_command=True)
     async def help(self, ctx):
         hEmbed = Embed(title="Help",
@@ -97,9 +134,6 @@ class Miscellaneous(Cog):
                          inline=False)
         hEmbed.add_field(name=":newspaper: News",
                          value="countrynews, topicnews",
-                         inline=False)
-        hEmbed.add_field(name=":headphones: Music",
-                         value="connect, disconnect, play, queue, pause, stop",
                          inline=False)
         await ctx.send(embed=hEmbed)
 
@@ -152,6 +186,22 @@ class Miscellaneous(Cog):
         em.add_field(name="**Syntax**", value="+clearwarns <member>")
         await ctx.send(embed=em)
 
+    @help.command()
+    async def lock(self, ctx):
+        em = Embed(title="lock",
+                   description="Lock a channel and sends why. It locks the channel where the command was issued unless another channel is provided",
+                   color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+lock <channel> [reason]")
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def unlock(self, ctx):
+        em = Embed(title="unlock",
+                   description="Unlock a channel that has been locked. Unlocks channel where the command was issued unless another channel is provided",
+                   color=ctx.author.color)
+        em.add_field(name="**Syntax**", value="+unlock <channel>")
+        await ctx.send(embed=em)
+
     @help.command(name="8ball")
     async def _8ball(self, ctx):
         em = Embed(title="8ball",
@@ -202,41 +252,6 @@ class Miscellaneous(Cog):
             name="Topic news", description="Get some news from various sources given a topic", color=ctx.author.color)
         em.add_field(name="**Syntax**",
                      value="+topicnews <topic> <number of articles>")
-        await ctx.send(embed=em)
-
-    @help.command()
-    async def connect(self, ctx):
-        em = Embed(
-            title="Connect", description="Join a voice channel", color=ctx.author.color)
-        em.add_field(name="**Syntax**", value="+connect [voice channel name]")
-        await ctx.send(embed=em)
-
-    @help.command()
-    async def play(self, ctx):
-        em = Embed(title="Play", description="Play a song",
-                   color=ctx.author.color)
-        em.add_field(name="**Syntax**",
-                     value="+play <song name> or +play <url>")
-        await ctx.send(embed=em)
-
-    @help.command()
-    async def pause(self, ctx):
-        em = Embed(title="Pause", description="Pause the song",
-                   color=ctx.author.color)
-        em.add_fiel(name="**Syntax**", value="+pause")
-        await ctx.send(embed=em)
-
-    @help.command()
-    async def stop(self, ctx):
-        em = Embed(
-            title="Stop", description="Stop the player and empty the queue", color=ctx.author.color)
-        em.add_field(name="**Syntax**", value="+stop")
-        await ctx.send(embed=em)
-
-    async def queue(self, ctx):
-        em = Embed(
-            title="Queue", description="Show the queue in a song", color=ctx.author.color)
-        em.add_field(name="**Syntax", value="+queue")
         await ctx.send(embed=em)
 
 

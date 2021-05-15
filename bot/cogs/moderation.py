@@ -1,6 +1,8 @@
 from discord.ext.commands import Cog, command, has_permissions, CommandError
-from discord import Member, Embed, Game, Color
+from discord import Member, Embed, Game, Colour, TextChannel
 from aiofiles import open
+import asyncio
+from typing import Optional
 
 bot_warnings = {}
 
@@ -63,7 +65,8 @@ class Moderation(Cog):
         elif member is None:
             return await ctx.send("Please provide a valid member to ban")
         else:
-            await member.ban(reason=reason)
+            true_reason = ' '.join(reason)
+            await member.ban(reason=true_reason)
             await ctx.send(f"{member.mention} has been banned from the server.")
 
     @command(name='unban', pass_context=True, help='unban a user')
@@ -141,6 +144,51 @@ class Moderation(Cog):
                 if str(member.id) not in line:
                     file.write(line)
 
+    @command(name='purge', pass_context=True, aliases=['clear'])
+    async def clear(self, ctx, limit: int=None):
+        if limit is None:
+            return await ctx.send("Please specify the number of messages to delete")
+        elif limit > 100:
+            return await ctx.send("Too many messages to purge")
+        else:
+            await ctx.channel.purge(limit=limit)
+            message = await ctx.send(f"Purged {limit} messages")
+            await asyncio.sleep(5)
+            await message.delete()
+
+    @command(name='lock', pass_context=True)
+    async def lock(self, ctx, channel: Optional[TextChannel], reason = None):
+        if reason is None:
+            return await ctx.send("You have not provided a reason to lock the channel")
+        channel = channel or ctx.channel
+        overwrite = channel.overwrites_for(ctx.guild.default_role)
+        overwrite.send_messages = False
+        await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+        em = Embed(title="The channel has been locked", description=f"The channel has been locked. Reason: `{reason}`", colour=Colour.blurple())
+        await ctx.send(embed=em)
+
+    @command(name='unlock', pass_context=True)
+    async def unlock(self, ctx, channel: TextChannel = None):
+        channel = channel or ctx.channel
+        overwrite = channel.overwrites_for(ctx.guild.default_role)
+        overwrite.send_messages = True
+        await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+        await ctx.send("Channel unlocked")
+
+    @command(name='lockdown', pass_context=True)
+    async def lockdown(self, ctx, end: Optional[str]):
+        if end is None:
+            for channel in ctx.guild.channels:
+                overwrite = channel.overwrites_for(ctx.guild.default_role)
+                overwrite.send_messages = False
+                await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+            await ctx.send("The server has been locked")
+        else:
+            for channel in ctx.guild.channels:
+                overwrite = channel.overwrites_for(ctx.guild.default_role)
+                overwrite.send_messages = True
+                await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+            await ctx.send("The server has been unlocked")
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
