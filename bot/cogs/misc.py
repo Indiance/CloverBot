@@ -106,15 +106,20 @@ class Miscellaneous(Cog):
     @command(name="serverinfo", pass_context=True)
     async def serverinfo(self, ctx):
         guild = ctx.guild
-        em = Embed(title="Showing information about the server", description=f"Server name: {guild.name}", color=guild.owner.color)
+        bots = [member for member in guild.members if member.bot]
+        users = [member for member in guild.members if not member.bot]
+        roles = [role.mention for role in guild.roles if role.mentionable]
+        em = Embed(title=f"Showing information about {guild.name}", color=guild.owner.color)
         em.add_field(name="Date the server was created", value=guild.created_at.strftime("%d/%m/%Y %H:%M"), inline=False)
-        em.add_field(name="Number of members", value=guild.member_count)
-        em.add_field(name="Number of roles", value=len(guild.roles))
-        em.add_field(name="Number of channels", value=len(guild.channels))
+        em.add_field(name="Server owner", value=guild.owner.mention)
+        em.add_field(name="Number of users", value=len(users))
+        em.add_field(name="Number of bots", value=len(bots))
+        em.add_field(name="Number of categories", value=len(guild.categories))
         em.add_field(name="Number of text channels", value=len(guild.text_channels))
         em.add_field(name="Number of voice channels", value=len(guild.voice_channels))
-        roles = [role.mention for role in guild.roles if role.mentionable]
-        em.add_field(name="Roles in the server", value=f"{' '.join(roles) if roles else 'None'}")
+        em.add_field(name="Region", value=guild.region)
+        em.add_field(name="Number of roles", value=len(guild.roles))
+        em.add_field(name="Roles in the server", value=f"{' '.join(roles) if roles else 'None'}", inline=False)
         em.set_thumbnail(url=guild.icon_url)
         await ctx.send(embed=em)
 
