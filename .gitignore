@@ -7,3 +7,4 @@ __pycache__
 application.yml
 Lavalink.jar
 /logs/
+.DS_Store

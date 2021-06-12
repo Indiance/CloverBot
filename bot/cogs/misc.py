@@ -1,7 +1,8 @@
 # discord Imports
 import discord
-from discord import Embed, Member, File
+from discord import Embed, Member, File, Spotify, Game
 from discord.ext.commands import command, Cog, group, is_owner
+
 # other imports
 from random import choice
 from dotenv import load_dotenv
@@ -10,8 +11,8 @@ from typing import Optional
 from io import BytesIO
 from datetime import datetime as dt
 
-load_dotenv()
 
+load_dotenv()
 
 class Miscellaneous(Cog):
     def __init__(self, bot):
@@ -100,6 +101,11 @@ class Miscellaneous(Cog):
         em.add_field(name="Activity", value=f"{user.activity.name if user.activity else 'N/A'}")
         em.add_field(name="Is the user a bot?", value=user.bot)
         em.set_thumbnail(url=user.avatar_url)
+        for activity in user.activities:
+            if isinstance(activity, Spotify):
+                em.add_field(name="Activity", value=f"Listening to {activity.title} by {activity.artist}")
+            elif isinstance(activity, Game):
+                em.add_field(name="Activity", value=f"Playing {activity.name}")
         await ctx.send(embed=em)
 
     @command(name="serverinfo", pass_context=True)
@@ -121,6 +127,11 @@ class Miscellaneous(Cog):
         em.add_field(name="Roles in the server", value=f"{' '.join(roles) if roles else 'None'}", inline=False)
         em.set_thumbnail(url=guild.icon_url)
         await ctx.send(embed=em)
+
+    @command(name="modi", pass_context=True)
+    async def modi(self, ctx):
+        await ctx.send("<:LeTroll:832489363975438377>")
+    
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))

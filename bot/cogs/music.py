@@ -8,6 +8,7 @@ from enum import Enum
 import discord
 import wavelink
 from discord.ext import commands
+from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType, button
 
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 OPTIONS = {
@@ -194,18 +195,86 @@ class Player(wavelink.Player):
         embed.set_author(name="Query Results")
         embed.set_footer(text=f"Invoked by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
 
-        msg = await ctx.send(embed=embed)
-        for emoji in list(OPTIONS.keys())[:min(len(tracks), len(OPTIONS))]:
-            await msg.add_reaction(emoji)
+        msg = await ctx.send(
+            embed=embed,
+            components = [
+                [
+                Button(label="1"),
+                Button(label="2"),
+                Button(label="3"),
+                Button(label="4"),
+                Button(label="5")
+                ]
+            ]
+            )
 
         try:
-            reaction, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=_check)
+            btn1 = await self.bot.wait_for("button_click")
+            if btn1.component.label == "1":
+                await msg.edit(components = [
+                    [
+                        Button(style=ButtonStyle.green, label="1"),
+                        Button(label="2"),
+                        Button(label="3"),
+                        Button(label="4"),
+                        Button(label="5")
+                    ]
+                ])
+                await btn1.respond(type=6)
+                return tracks[0]
+            if btn1.component.label == "2":
+                await msg.edit(components = [
+                    [
+                        Button(label="1"),
+                        Button(style=ButtonStyle.green, label="2"),
+                        Button(label="3"),
+                        Button(label="4"),
+                        Button(label="5")
+                    ]
+                ])
+                await btn1.respond(type=6)
+                return tracks[1]
+            if btn1.component.label == "3":
+                await msg.edit(components = [
+                    [
+                        Button(label="1"),
+                        Button(label="2"),
+                        Button(style=ButtonStyle.green, label="3"),
+                        Button(label="4"),
+                        Button(label="5")
+                    ]
+                ])
+                await btn1.respond(type=6)
+                return tracks[2]
+            if btn1.component.label == "4":
+                await msg.edit(components = [
+                    [
+                        Button(label="1"),
+                        Button(label="2"),
+                        Button(label="3"),
+                        Button(style=ButtonStyle.green, label="4"),
+                        Button(label="5")
+                    ]
+                ])
+                await btn1.respond(type=6)
+                return tracks[3]
+            if btn1.component.label == "5":
+                await msg.edit(components = [
+                    [
+                        Button(label="1"),
+                        Button(label="2"),
+                        Button(label="3"),
+                        Button(label="4"),
+                        Button(style=ButtonStyle.green, label="5")
+                    ]
+                ])
+                await btn1.respond(type=6)
+                return tracks[4]
         except asyncio.TimeoutError:
             await msg.delete()
             await ctx.message.delete()
         else:
             await msg.delete()
-            return tracks[OPTIONS[reaction.emoji]]
 
     async def start_playback(self):
         await self.play(self.queue.current_track)
@@ -226,6 +295,10 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.start_nodes())
+    
+    @commands.Cog.listener()
+    async def on_ready(self):
+        DiscordComponents(self.bot)        
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

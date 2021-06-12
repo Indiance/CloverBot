@@ -3,6 +3,7 @@ from discord import Member, Embed, Game, Colour, TextChannel
 from aiofiles import open
 import asyncio
 from typing import Optional
+from discord.utils import get
 
 bot_warnings = {}
 
@@ -189,6 +190,25 @@ class Moderation(Cog):
                 overwrite.send_messages = True
                 await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
             await ctx.send("The server has been unlocked")
+
+    @command(name="mute", pass_context=True)
+    async def mute(self, ctx, member: Member = None):
+        if Member is None:
+            return await ctx.send("You have not mentioned a member to mute")
+        mutedRole = get(ctx.guild.roles, name="Muted")
+        if mutedRole is None:
+            return await ctx.send("You need to create a muted role")
+        else:
+            await member.add_roles(mutedRole)
+            await ctx.send(f"{member.diplay_name} has been muted")
+
+    @command(name="unmute", pass_context=True)
+    async def unmute(self, ctx, member: Member = None):
+        if Member is None:
+            return await ctx.send("You have not mentioned a member to unmute")
+        mutedRole = get(ctx.guild.roles, name="Muted")
+        await member.remove_roles(mutedRole)
+        await ctx.send(f"{member.display_name} has been unmuted")
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
