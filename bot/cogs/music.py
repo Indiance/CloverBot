@@ -8,7 +8,7 @@ from enum import Enum
 import discord
 import wavelink
 from discord.ext import commands
-from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType, button
+from discord_components import DiscordComponents, Button, ButtonStyle
 
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 OPTIONS = {
@@ -295,10 +295,10 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.start_nodes())
-    
+
     @commands.Cog.listener()
     async def on_ready(self):
-        DiscordComponents(self.bot)        
+        DiscordComponents(self.bot)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

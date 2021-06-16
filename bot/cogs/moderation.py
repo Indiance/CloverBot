@@ -1,4 +1,4 @@
-from discord.ext.commands import Cog, command, has_permissions, CommandError
+from discord.ext.commands import Cog, command, has_permissions
 from discord import Member, Embed, Game, Colour, TextChannel
 from aiofiles import open
 import asyncio
@@ -146,7 +146,7 @@ class Moderation(Cog):
                     file.write(line)
 
     @command(name='purge', pass_context=True, aliases=['clear'])
-    async def clear(self, ctx, limit: int=None):
+    async def clear(self, ctx, limit: int = None):
         if limit is None:
             return await ctx.send("Please specify the number of messages to delete")
         elif limit > 100:
@@ -158,14 +158,15 @@ class Moderation(Cog):
             await message.delete()
 
     @command(name='lock', pass_context=True)
-    async def lock(self, ctx, channel: Optional[TextChannel], reason = None):
+    async def lock(self, ctx, channel: Optional[TextChannel], reason=None):
         if reason is None:
             return await ctx.send("You have not provided a reason to lock the channel")
         channel = channel or ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
         overwrite.send_messages = False
         await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
-        em = Embed(title="The channel has been locked", description=f"The channel has been locked. Reason: `{reason}`", colour=Colour.blurple())
+        em = Embed(title="The channel has been locked",
+                   description=f"The channel has been locked. Reason: `{reason}`", colour=Colour.blurple())
         await ctx.send(embed=em)
 
     @command(name='unlock', pass_context=True)
@@ -209,6 +210,7 @@ class Moderation(Cog):
         mutedRole = get(ctx.guild.roles, name="Muted")
         await member.remove_roles(mutedRole)
         await ctx.send(f"{member.display_name} has been unmuted")
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

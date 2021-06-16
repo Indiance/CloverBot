@@ -14,6 +14,7 @@ from datetime import datetime as dt
 
 load_dotenv()
 
+
 class Miscellaneous(Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -87,23 +88,26 @@ class Miscellaneous(Cog):
     async def userinfo(self, ctx, member: Optional[Member]):
         user = member or ctx.author
         em = Embed(title=f"Showing user information for {user.name}#{user.discriminator}",
-            colour=user.color,
-            description=user.mention,
-            timestamp=dt.utcnow())
+                   colour=user.color,
+                   description=user.mention,
+                   timestamp=dt.utcnow())
         em.add_field(name="Created at",
                      value=user.created_at.strftime("%d/%m/%Y %H:%M"))
         em.add_field(name="Joined server at",
                      value=user.joined_at.strftime("%d/%m/%Y %H:%M"))
         mentions = [role.mention for role in user.roles if role.mentionable]
-        em.add_field(name=f"Roles [{len(mentions)}]", value=f"{' '.join(mentions) if mentions else 'None'}", inline=False)
+        em.add_field(name=f"Roles [{len(mentions)}]",
+                     value=f"{' '.join(mentions) if mentions else 'None'}", inline=False)
         em.add_field(name="Top Role", value=user.top_role.mention)
         em.add_field(name="Status", value=str(user.status).title())
-        em.add_field(name="Activity", value=f"{user.activity.name if user.activity else 'N/A'}")
+        em.add_field(name="Activity",
+                     value=f"{user.activity.name if user.activity else 'N/A'}")
         em.add_field(name="Is the user a bot?", value=user.bot)
         em.set_thumbnail(url=user.avatar_url)
         for activity in user.activities:
             if isinstance(activity, Spotify):
-                em.add_field(name="Activity", value=f"Listening to {activity.title} by {activity.artist}")
+                em.add_field(
+                    name="Activity", value=f"Listening to {activity.title} by {activity.artist}")
             elif isinstance(activity, Game):
                 em.add_field(name="Activity", value=f"Playing {activity.name}")
         await ctx.send(embed=em)
@@ -114,24 +118,25 @@ class Miscellaneous(Cog):
         bots = [member for member in guild.members if member.bot]
         users = [member for member in guild.members if not member.bot]
         roles = [role.mention for role in guild.roles if role.mentionable]
-        em = Embed(title=f"Showing information about {guild.name}", color=guild.owner.color)
-        em.add_field(name="Date the server was created", value=guild.created_at.strftime("%d/%m/%Y %H:%M"), inline=False)
+        em = Embed(
+            title=f"Showing information about {guild.name}", color=guild.owner.color)
+        em.add_field(name="Date the server was created",
+                     value=guild.created_at.strftime("%d/%m/%Y %H:%M"), inline=False)
         em.add_field(name="Server owner", value=guild.owner.mention)
         em.add_field(name="Number of users", value=len(users))
         em.add_field(name="Number of bots", value=len(bots))
         em.add_field(name="Number of categories", value=len(guild.categories))
-        em.add_field(name="Number of text channels", value=len(guild.text_channels))
-        em.add_field(name="Number of voice channels", value=len(guild.voice_channels))
+        em.add_field(name="Number of text channels",
+                     value=len(guild.text_channels))
+        em.add_field(name="Number of voice channels",
+                     value=len(guild.voice_channels))
         em.add_field(name="Region", value=guild.region)
         em.add_field(name="Number of roles", value=len(guild.roles))
-        em.add_field(name="Roles in the server", value=f"{' '.join(roles) if roles else 'None'}", inline=False)
+        em.add_field(name="Roles in the server",
+                     value=f"{' '.join(roles) if roles else 'None'}", inline=False)
         em.set_thumbnail(url=guild.icon_url)
         await ctx.send(embed=em)
 
-    @command(name="modi", pass_context=True)
-    async def modi(self, ctx):
-        await ctx.send("<:LeTroll:832489363975438377>")
-    
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))
