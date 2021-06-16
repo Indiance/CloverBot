@@ -57,7 +57,7 @@ class CloverBot(commands.Bot):
         print("Bot ready.")
 
     async def prefix(self, bot, msg):
-        return commands.when_mentioned_or("~")(bot, msg)
+        return commands.when_mentioned_or("+")(bot, msg)
 
     async def process_commands(self, msg):
         ctx = await self.get_context(msg, cls=commands.Context)
