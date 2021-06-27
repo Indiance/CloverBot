@@ -1,5 +1,5 @@
 from discord import Embed
-from discord.ext.commands import command, Cog
+from discord.ext.commands import command, Cog, cooldown, BucketType, CommandOnCooldown
 import requests
 import os
 from discord_components import DiscordComponents, Button, ButtonStyle
@@ -17,9 +17,13 @@ class Trivia(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(name="trivia", pass_context=True)
-    async def trivia(self, ctx):
-        url = "https://opentdb.com/api.php?amount=1"
+    @command(name="trivia", pass_context=True, help="Play a game of trivia where you can choose the difficulty between easy difficult and hard")
+    @cooldown(1, 20, BucketType.user)
+    async def trivia(self, ctx, difficulty: str = None):
+        if difficulty is None:
+            url = "https://opentdb.com/api.php?amount=1"
+        else:
+            url = f"https://opentdb.com/api.php?amount=1&difficulty={difficulty.lower()}"
         r = requests.get(url)
         results = r.json()["results"][0]
         category = results["category"]
@@ -58,6 +62,11 @@ class Trivia(Cog):
                 await ctx.send("That was the right answer")
         except asyncio.TimeoutError:
             await ctx.send("No answer received in time")
+
+    @trivia.error
+    async def trivia_error(self, ctx, err):
+        if isinstance(err, CommandOnCooldown):
+            await ctx.send(f"Oops that command is on cooldown for {err.retry_after:.0f} more seconds")
 
 
 def setup(bot):

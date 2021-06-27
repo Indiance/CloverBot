@@ -22,6 +22,7 @@ class Reddit(Cog):
         url = submission.url
         rEmbed = discord.Embed(
             title=submission.title, description=submission.selftext, colour=discord.Colour.green())
+        rEmbed.url = "https://www.reddit.com" + submission.permalink
         if url.endswith(('.jpg', '.png', '.gif', '.jpeg')):
             rEmbed.set_image(url=url)
         rEmbed.set_author(name=submission.author)
@@ -38,6 +39,7 @@ class Reddit(Cog):
         url = submission.url
         rEmbed = discord.Embed(
             title=submission.title, description=submission.selftext, colour=discord.Colour.green())
+        rEmbed.url = "https://www.reddit.com" + submission.permalink
         if url.endswith(('.jpg', '.png', '.gif', '.jpeg')):
             rEmbed.set_image(url=url)
         rEmbed.set_author(name=str(submission.author))

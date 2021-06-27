@@ -6,11 +6,11 @@ from discord.ext.commands import command, Cog
 import pokepy
 
 
-class Miscellaneous(Cog):
+class Pokemon(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(name="pokemon", pass_context=True)
+    @command(name="pokemon", pass_context=True, help="Obtain information about a pokemon")
     async def pokemon(self, ctx, pokemon=None):
         if pokemon is None:
             return await ctx.send("Please provide a pokemon to display information about")
@@ -51,4 +51,4 @@ class Miscellaneous(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Miscellaneous(bot))
+    bot.add_cog(Pokemon(bot))

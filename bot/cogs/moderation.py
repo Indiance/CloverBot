@@ -42,6 +42,30 @@ class Moderation(Cog):
     async def on_guild_join(self, guild):
         bot_warnings[guild.id] = {}
 
+    @Cog.listener()
+    async def on_message(self, message):
+        if message.guild:
+            return
+        if message.author == self.bot.user:
+            return
+        dmEmbed = Embed(title="Ticket opened",
+                        description=f"Message received from {message.author.mention}", color=Colour.dark_red())
+        dmEmbed.add_field(name="Content of the message", value=message.content)
+        channel = self.bot.get_channel(787528401279385631)
+        await channel.send(embed=dmEmbed)
+        await message.channel.send("Message sent successfully")
+
+    @command(name="send", pass_context=True, help="Send a dm to a person")
+    @has_permissions(kick_members=True)
+    async def send(self, ctx, member: Member = None, *, message):
+        if member is None:
+            await ctx.send("Please provide a member to send a message to")
+        if message is None:
+            await ctx.send("Please provide a message to send to the user")
+        sEmbed = Embed(title="Message from the Mods", description=f"Message sent by {ctx.author.display_name}")
+        sEmbed.add_field(name="Content of the message", value=message)
+        await ctx.send(embed=sEmbed)
+
     @command(name='kick', pass_context=True, help='kick a user')
     @has_permissions(kick_members=True)
     async def kick(self, ctx, member: Member = None, *reason):
@@ -145,7 +169,7 @@ class Moderation(Cog):
                 if str(member.id) not in line:
                     file.write(line)
 
-    @command(name='purge', pass_context=True, aliases=['clear'])
+    @command(name='purge', pass_context=True, aliases=['clear'], help="Clear a certain number of messages.")
     async def clear(self, ctx, limit: int = None):
         if limit is None:
             return await ctx.send("Please specify the number of messages to delete")
@@ -157,7 +181,7 @@ class Moderation(Cog):
             await asyncio.sleep(5)
             await message.delete()
 
-    @command(name='lock', pass_context=True)
+    @command(name='lock', pass_context=True, help="Lock a channel")
     async def lock(self, ctx, channel: Optional[TextChannel], reason=None):
         if reason is None:
             return await ctx.send("You have not provided a reason to lock the channel")
@@ -169,7 +193,7 @@ class Moderation(Cog):
                    description=f"The channel has been locked. Reason: `{reason}`", colour=Colour.blurple())
         await ctx.send(embed=em)
 
-    @command(name='unlock', pass_context=True)
+    @command(name='unlock', pass_context=True, help="Unlock a channel")
     async def unlock(self, ctx, channel: TextChannel = None):
         channel = channel or ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
@@ -177,7 +201,7 @@ class Moderation(Cog):
         await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
         await ctx.send("Channel unlocked")
 
-    @command(name='lockdown', pass_context=True)
+    @command(name='lockdown', pass_context=True, help="Lock all the channels in a server")
     async def lockdown(self, ctx, end: Optional[str]):
         if end is None:
             for channel in ctx.guild.channels:
@@ -192,7 +216,7 @@ class Moderation(Cog):
                 await channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
             await ctx.send("The server has been unlocked")
 
-    @command(name="mute", pass_context=True)
+    @command(name="mute", pass_context=True, help="Add the muted role to a person")
     async def mute(self, ctx, member: Member = None):
         if Member is None:
             return await ctx.send("You have not mentioned a member to mute")
@@ -201,9 +225,9 @@ class Moderation(Cog):
             return await ctx.send("You need to create a muted role")
         else:
             await member.add_roles(mutedRole)
-            await ctx.send(f"{member.diplay_name} has been muted")
+            await ctx.send(f"{member.display_name} has been muted")
 
-    @command(name="unmute", pass_context=True)
+    @command(name="unmute", pass_context=True, help="Remove the muted role from a person")
     async def unmute(self, ctx, member: Member = None):
         if Member is None:
             return await ctx.send("You have not mentioned a member to unmute")

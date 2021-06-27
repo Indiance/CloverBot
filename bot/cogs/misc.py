@@ -1,5 +1,4 @@
 # discord Imports
-import discord
 from discord import Embed, Member, File, Spotify, Game
 from discord.ext.commands import command, Cog, group, is_owner
 
@@ -19,7 +18,7 @@ class Miscellaneous(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(name='8ball', pass_context=True)
+    @command(name='8ball', pass_context=True, help="Predict events or answer questions using the 8ball")
     async def ball(self, ctx, *question):
         choices = [
             "As I see it, yes", "Ask again later", "Better not tell you now",
@@ -39,7 +38,7 @@ class Miscellaneous(Cog):
     async def shutdown(self, ctx):
         await ctx.bot.close()
 
-    @command(name='wasted', pass_context=True)
+    @command(name='wasted', pass_context=True, help="Add the wasted image on top of a user's avatar")
     async def wasted(self, ctx, member: Member = None):
         if not member:
             member = ctx.author
@@ -54,7 +53,7 @@ class Miscellaneous(Cog):
                 await ctx.send(file=File(data, 'wasted.png'))
                 await wastedsession.close()
 
-    @command(name="invert", pass_context=True)
+    @command(name="invert", pass_context=True, help="Invert the colors on a user's avatar")
     async def invert(self, ctx, member: Member = None):
         if not member:
             member = ctx.author
@@ -69,7 +68,7 @@ class Miscellaneous(Cog):
                 await ctx.send(file=File(data, 'inverted.png'))
                 await invertsession.close()
 
-    @command(name="pixelate", pass_context=True)
+    @command(name="pixelate", pass_context=True, help="Pixelate someone's avatar")
     async def pixelate(self, ctx, member: Member = None):
         if not member:
             member = ctx.author
@@ -84,7 +83,7 @@ class Miscellaneous(Cog):
                 await ctx.send(file=File(data, 'pixelated.png'))
                 await invertsession.close()
 
-    @command(name="userinfo", pass_context=True)
+    @command(name="userinfo", pass_context=True, help="Show information about a user")
     async def userinfo(self, ctx, member: Optional[Member]):
         user = member or ctx.author
         em = Embed(title=f"Showing user information for {user.name}#{user.discriminator}",
@@ -112,7 +111,7 @@ class Miscellaneous(Cog):
                 em.add_field(name="Activity", value=f"Playing {activity.name}")
         await ctx.send(embed=em)
 
-    @command(name="serverinfo", pass_context=True)
+    @command(name="serverinfo", pass_context=True, help="Show information about a server")
     async def serverinfo(self, ctx):
         guild = ctx.guild
         bots = [member for member in guild.members if member.bot]
@@ -135,6 +134,7 @@ class Miscellaneous(Cog):
         em.add_field(name="Roles in the server",
                      value=f"{' '.join(roles) if roles else 'None'}", inline=False)
         em.set_thumbnail(url=guild.icon_url)
+        em.set_footer(text=guild.id)
         await ctx.send(embed=em)
 
 

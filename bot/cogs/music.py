@@ -4,13 +4,16 @@ import random
 import re
 import typing as t
 from enum import Enum
+from aiohttp import request
 
 import discord
 import wavelink
 from discord.ext import commands
+from discord.ext.commands import command, Cog, cooldown, BucketType, CommandOnCooldown, CommandError
 from discord_components import DiscordComponents, Button, ButtonStyle
 
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+LYRICS_URL = "https://some-random-api.ml/lyrics?title={}"
 OPTIONS = {
     "1️⃣": 0,
     "2⃣": 1,
@@ -20,36 +23,40 @@ OPTIONS = {
 }
 
 
-class AlreadyConnectedToChannel(commands.CommandError):
+class AlreadyConnectedToChannel(CommandError):
     pass
 
 
-class NoVoiceChannel(commands.CommandError):
+class NoVoiceChannel(CommandError):
     pass
 
 
-class QueueIsEmpty(commands.CommandError):
+class QueueIsEmpty(CommandError):
     pass
 
 
-class NoTracksFound(commands.CommandError):
+class NoTracksFound(CommandError):
     pass
 
 
-class PlayerIsAlreadyPaused(commands.CommandError):
+class PlayerIsAlreadyPaused(CommandError):
     pass
 
 
-class NoMoreTracks(commands.CommandError):
+class NoMoreTracks(CommandError):
     pass
 
 
-class NoPreviousTracks(commands.CommandError):
+class NoPreviousTracks(CommandError):
     pass
 
 
-class InvalidRepeatMode(commands.CommandError):
+class InvalidRepeatMode(CommandError):
     pass
+
+class NoLyricsFound(CommandError):
+    pass
+
 
 
 class RepeatMode(Enum):
@@ -290,17 +297,17 @@ class Player(wavelink.Player):
         await self.play(self.queue.current_track)
 
 
-class Music(commands.Cog, wavelink.WavelinkMixin):
+class Music(Cog, wavelink.WavelinkMixin):
     def __init__(self, bot):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.start_nodes())
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_ready(self):
         DiscordComponents(self.bot)
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if not member.bot and after.channel is None:
             if not [m for m in before.channel.members if not m.bot]:
@@ -349,7 +356,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(obj, discord.Guild):
             return self.wavelink.get_player(obj.id, cls=Player)
 
-    @commands.command(name="connect", aliases=["join"])
+    @command(name="connect", aliases=["join"], help="Make the bot join a vc.")
     async def connect_command(self, ctx, *, channel: t.Optional[discord.VoiceChannel]):
         player = self.get_player(ctx)
         channel = await player.connect(ctx, channel)
@@ -363,13 +370,13 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(exc, NoVoiceChannel):
             await ctx.send("No suitable voice channel was provided.")
 
-    @commands.command(name="disconnect", aliases=["leave"])
+    @command(name="disconnect", aliases=["leave"], help="Make the bot leave the vc.")
     async def disconnect_command(self, ctx):
         player = self.get_player(ctx)
         await player.teardown()
         await ctx.send("Disconnected.")
 
-    @commands.command(name="play")
+    @command(name="play", help="Play a song or resume a song if paused before")
     async def play_command(self, ctx, *, query: t.Optional[str]):
         player = self.get_player(ctx)
 
@@ -398,7 +405,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(exc, NoVoiceChannel):
             await ctx.send("No suitable voice channel was provided.")
 
-    @commands.command(name="pause")
+    @command(name="pause", help="Pause the player")
     async def pause_command(self, ctx):
         player = self.get_player(ctx)
 
@@ -413,14 +420,14 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if isinstance(exc, PlayerIsAlreadyPaused):
             await ctx.send("Already paused.")
 
-    @commands.command(name="stop")
+    @command(name="stop", help="Stop the player")
     async def stop_command(self, ctx):
         player = self.get_player(ctx)
         player.queue.empty()
         await player.stop()
         await ctx.send("Playback stopped.")
 
-    @commands.command(name="next", aliases=["skip"])
+    @command(name="next", aliases=["skip"], help="Play the next track")
     async def next_command(self, ctx):
         player = self.get_player(ctx)
 
@@ -437,7 +444,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(exc, NoMoreTracks):
             await ctx.send("There are no more tracks in the queue.")
 
-    @commands.command(name="queue")
+    @command(name="queue", help="Show the queue/list of tracks")
     async def queue_command(self, ctx, show: t.Optional[int] = 10):
         player = self.get_player(ctx)
 
@@ -471,6 +478,36 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if isinstance(exc, QueueIsEmpty):
             await ctx.send("The queue is currently empty.")
 
+    @command(name="lyrics", pass_context=True)
+    @cooldown(1, 30, BucketType.user)
+    async def lyrics(self, ctx,*, name: t.Optional[str]):
+        player = self.get_player(ctx)
+        name = name or player.queue.current_track.title
+        print(name)
+        async with ctx.typing():
+            async with request("GET", LYRICS_URL.format(name), headers={}) as response:
+                if response.status != 200:
+                    return await ctx.send("No lyrics could be found for this song")
+
+                data = await response.json()
+
+                if len(data["lyrics"]) < 2000:
+                    embed = discord.Embed(
+                        title=data['title'],
+                        description=data["lyrics"],
+                        color=ctx.author.color,
+                        timestamp=dt.datetime.utcnow(),
+                    )
+                    embed.set_author(name=data["author"])
+                    embed.set_thumbnail(url=data["thumbnail"]["genius"])
+                    await ctx.send(embed=embed)
+                else:
+                    await ctx.send(f"<{data['links']['genius']}>")
+
+    @lyrics.error
+    async def lyrics_error(self, ctx, err):
+        if isinstance(err, CommandOnCooldown):
+            await ctx.send(f"Oops that command is on cooldown for {err.retry_after:.0f} more seconds")
 
 def setup(bot):
     bot.add_cog(Music(bot))
