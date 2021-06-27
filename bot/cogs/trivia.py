@@ -70,5 +70,4 @@ class Trivia(Cog):
 
 
 def setup(bot):
-    DiscordComponents(bot)
     bot.add_cog(Trivia(bot))
