@@ -1,14 +1,8 @@
 from discord import Embed
 from discord.ext.commands import Cog, command
-from googletrans import Translator
 from json import loads
 from requests import get
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
-
-translator = Translator()
 
 api_key = os.getenv('NEWSAPI_KEY')
 
@@ -32,7 +26,7 @@ class News(Cog):
 
         for article in articles['articles']:
             nEmbed = Embed(
-                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=ctx.author.color)
+                title=article['title'], description=article['description'], colour=ctx.author.color)
             nEmbed.set_author(name=article['author'])
             await ctx.send(embed=nEmbed)
             if i < count:
@@ -55,7 +49,7 @@ class News(Cog):
 
         for article in articles['articles']:
             nEmbed = Embed(
-                title=translator.translate(article['title']).text, description=translator.translate(article['description']).text, colour=ctx.author.color)
+                title=article['title'], description=article['description'], colour=ctx.author.color)
             nEmbed.set_author(name=article['author'])
             await ctx.send(embed=nEmbed)
             if i < count:

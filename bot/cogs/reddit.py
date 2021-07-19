@@ -1,7 +1,6 @@
 import discord
 from discord.ext.commands import command, Cog
 from asyncpraw import Reddit
-from dotenv import load_dotenv
 import os
 
 

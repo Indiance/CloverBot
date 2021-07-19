@@ -1,11 +1,8 @@
 from discord.ext.commands import Cog, command, has_permissions
 from discord import Member, Embed, Game, Colour, TextChannel
-from aiofiles import open
 import asyncio
 from typing import Optional
 from discord.utils import get
-
-bot_warnings = {}
 
 
 class Moderation(Cog):
@@ -16,31 +13,6 @@ class Moderation(Cog):
     async def on_ready(self):
         game = Game('+help')
         await self.bot.change_presence(activity=game)
-        for guild in self.bot.guilds:
-            async with open(f"{guild.id}.txt", mode="a") as temp:
-                pass
-            bot_warnings[guild.id] = {}
-
-        for guild in self.bot.guilds:
-            async with open(f"{guild.id}.txt", mode="r") as file:
-                lines = await file.readlines()
-
-                for line in lines:
-                    data = line.split(" ")
-                    member_id = int(data[0])
-                    admin_id = int(data[1])
-                    reason = " ".join(data[2:]).strip("\n")
-                    try:
-                        bot_warnings[guild.id][member_id][0] += 1
-                        bot_warnings[guild.id][member_id][1].append(
-                            (admin_id, reason))
-                    except KeyError:
-                        bot_warnings[guild.id][member_id] = [
-                            1, [(admin_id, reason)]]
-
-    @Cog.listener()
-    async def on_guild_join(self, guild):
-        bot_warnings[guild.id] = {}
 
     @Cog.listener()
     async def on_message(self, message):
@@ -104,70 +76,6 @@ class Moderation(Cog):
             if (user.name, user.discriminator) == (member_name, member_disc):
                 await ctx.guild.unban(user)
                 await ctx.send(f"{user} was unbanned")
-
-    @command(name='warn', pass_context=True, help='warn the user')
-    @has_permissions(kick_members=True)
-    async def warn(self, ctx, member: Member = None, reason=None):
-        if member is None:
-            return await ctx.send("The member you have provided is not found or you have not provided a member.")
-
-        if member is self.bot.user:
-            return await ctx.send("Oye stop warning me")
-
-        if reason is None:
-            return await ctx.send("Please provide a reason for warning the member.")
-
-        try:
-            first_warning = False
-            bot_warnings[ctx.guild.id][member.id][0] += 1
-            bot_warnings[ctx.guild.id][member.id][1].append(
-                (ctx.author.id, reason))
-        except KeyError:
-            first_warning = True
-            bot_warnings[ctx.guild.id][member.id] = [
-                1, [(ctx.author.id, reason)]]
-
-        count = bot_warnings[ctx.guild.id][member.id][0]
-
-        async with open(f"{member.guild.id}.txt", mode="a") as file:
-            await file.write(f"{member.id} {ctx.author.id} {reason}\n")
-
-        await ctx.send(f"{member.mention} has {count} {'warning' if first_warning else 'warnings'}.")
-
-    @command(name='warnings', pass_context=True, help='show the warnings of a person')
-    async def warnings(self, ctx, member: Member = None):
-        if member is None:
-            await ctx.send("The member you have provided is not found or you have not provided a vallid member.")
-
-        warnEmbed = Embed(
-            title=f"Displaying Warnings for {member.name}", description="", colour=Colour.red())
-
-        try:
-            i = 1
-            for admin_id, reason in bot_warnings[ctx.guild.id][member.id][1]:
-                admin = member.guild.get_member(admin_id)
-                warnEmbed.description += f"**Warning {i}** given by: {admin.mention} for *'{reason}'*.\n"
-                i += 1
-            await ctx.send(embed=warnEmbed)
-        except KeyError:
-            await ctx.send("This member has no warnings")
-
-    @command(name='clearwarns', pass_context=True, help='clear the warnings of a person')
-    async def clearwarns(self, ctx, member: Member = None):
-        if member is None:
-            return await ctx.send("The member you have provided is invalid or you have not provided one")
-        try:
-            del bot_warnings[ctx.guild.id][member.id]
-        except KeyError:
-            return await ctx.send("This person does not have any warnings to clear.")
-
-        with open(f"{ctx.guild.id}.txt", "r") as file:
-            lines = file.readlines()
-
-        with open(f"{ctx.guild.id}.txt", mode="w") as file:
-            for line in lines:
-                if str(member.id) not in line:
-                    file.write(line)
 
     @command(name='purge', pass_context=True, aliases=['clear'], help="Clear a certain number of messages.")
     async def clear(self, ctx, limit: int = None):

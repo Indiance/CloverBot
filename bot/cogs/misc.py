@@ -4,14 +4,10 @@ from discord.ext.commands import command, Cog, group, is_owner
 
 # other imports
 from random import choice
-from dotenv import load_dotenv
 from aiohttp import ClientSession
 from typing import Optional
 from io import BytesIO
 from datetime import datetime as dt
-
-
-load_dotenv()
 
 
 class Miscellaneous(Cog):

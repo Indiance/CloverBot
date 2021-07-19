@@ -8,3 +8,6 @@ application.yml
 Lavalink.jar
 /logs/
 .DS_Store
+.replit
+*.lock
+*.toml
