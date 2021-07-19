@@ -1,11 +1,8 @@
 # discord Imports
 from discord import Embed
 from discord.ext.commands import command, Cog
-import requests
-import json
-
 # import pokemon thingy
-import pokepy
+import pokebase as pb
 
 
 class Pokemon(Cog):
@@ -16,13 +13,12 @@ class Pokemon(Cog):
     async def pokemon(self, ctx, pokemon=None):
         if pokemon is None:
             return await ctx.send("Please provide a pokemon to display information about")
-        client = pokepy.V2Client()
         try:
-            data = client.get_pokemon(pokemon)[0]
+            data = pb.pokemon(pokemon)
         except:
             return await ctx.send("The pokemon could not be found")
 
-        pokemon_avatar = data.sprites.front_default
+        pokemon_avatar = pb.SpriteResource('pokemon', data.id).url
         pokeEmbed = Embed()
         pokeEmbed.color = ctx.author.color
         pokeEmbed.title = f"Showing data about {data.name.title()}"
@@ -41,26 +37,7 @@ class Pokemon(Cog):
         pokeEmbed.add_field(name="Base Special Attack", value=data.stats[3].base_stat, inline=True)
         pokeEmbed.add_field(name="Base Special Defense", value=data.stats[4].base_stat, inline=True)
         pokeEmbed.add_field(name="Base Speed", value=data.stats[5].base_stat, inline=True)
-        try:
-            evolve_from = client.get_pokemon_species(pokemon)[0].evolves_from_species.name
-            pokeEmbed.add_field(name="Evolves from", value=evolve_from.capitalize())
-        except:
-            pokeEmbed.add_field(name="Evolves from", value="None")
-        chain_id = requests.get(client.get_pokemon_species(pokemon)[0].evolution_chain.url).json()["id"]
-        if pokemon == client.get_evolution_chain(chain_id)[0].chain.species.name:
-            try:
-                evolve_into = client.get_evolution_chain(chain_id)[0].chain.evolves_to[0].species.name
-                pokeEmbed.add_field(name="Evolves Into", value=evolve_into.capitalize())
-            except:
-                pokeEmbed.add_field(name="Evolves Into", value="None")
-        elif pokemon == client.get_evolution_chain(chain_id)[0].chain.evolves_to[0].species.name:
-            try:
-                evolve_into = client.get_evolution_chain(chain_id)[0].chain.evolves_to[0].evolves_to[0].species.name
-                pokeEmbed.add_field(name="Evolves Into", value=evolve_into.capitalize())
-            except:
-                pokeEmbed.add_field(name="Evolves Into", value="None")
-        else:
-            pokeEmbed.add_field(name="Evolves Into", value=None)
+        pokeEmbed.add_field(name="Evolves From Species", value=data.species.evolves_from_species, inline=True)
         await ctx.send(embed=pokeEmbed)
 
 
