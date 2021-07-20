@@ -3,7 +3,6 @@ from discord.ext.commands import command, Cog
 from asyncpraw import Reddit
 import os
 
-
 client_id = os.getenv("REDDIT_APP_ID")
 client_secret = os.getenv("REDDIT_APP_SECRET")
 reddit = Reddit(client_id=client_id, client_secret=client_secret,

@@ -43,7 +43,7 @@ class CloverBot(commands.Bot):
 
     async def on_disconnect(self):
         print("Bot disconnected.")
-    
+
     async def on_error(self, err, *args, **kwargs):
         raise
 
