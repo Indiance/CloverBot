@@ -1,6 +1,7 @@
 # discord Imports
 from discord import Embed, Member, File, Spotify, Game
-from discord.ext.commands import command, Cog, group, is_owner
+import discord
+from discord.ext.commands import command, Cog, is_owner
 
 # other imports
 from random import choice
@@ -8,6 +9,9 @@ from aiohttp import ClientSession
 from typing import Optional
 from io import BytesIO
 from datetime import datetime as dt
+from pistonapi import PistonAPI
+
+piston = PistonAPI()
 
 
 class Miscellaneous(Cog):
@@ -133,6 +137,38 @@ class Miscellaneous(Cog):
         em.set_footer(text=guild.id)
         await ctx.send(embed=em)
 
-
+    @command(name="compile", pass_context=True, help="Run code. Done using PistonAPI")
+    async def compile(self, ctx, *, code):
+        lang = code.split("\n")[0].replace("```","")
+        code = "\n".join(code.split("\n")[1:-1])
+        print(code)
+        versions = {
+                "python": "3.9",
+                "py": "3.9",
+                "java": "15.0.2",
+                "javascript":"16.3.0",
+                "js": "16.3.0",
+                "rust": "1.50.0",
+                "gcc": "10.2.0",
+                "c": "10.2.0",
+                "c++": "10.2.0",
+                "cpp": "10.2.0",
+                "typescript": "4.2.3",
+                "ts": "4.2.3",
+                "lua": "5.4.2",
+                "rust": "1.50.0",
+                "swift": "5.3.3",
+                "perl": "5.26.1",
+                "scala": "3.0.0",
+                "php": "8.0.2",
+                "octave": "6.2.0",
+                "go": "1.16.2"
+            }
+        if lang in versions.keys():
+            output = piston.execute(language=lang, version=versions[lang], code=code)
+            outputEmbed = Embed(title="Your code was compiled!", description=f"\nOutput:```{output}```", color=discord.Color.red())
+            await ctx.send(embed=outputEmbed)
+        else:
+            await ctx.send("There was an error. Either you did not provide a language or the language does not exist")
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))

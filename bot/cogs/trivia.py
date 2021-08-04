@@ -4,6 +4,9 @@ import requests
 import html
 import random
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 key = os.getenv("QUIZ_TOKEN")
 

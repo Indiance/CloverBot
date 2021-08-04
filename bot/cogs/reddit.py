@@ -2,6 +2,9 @@ import discord
 from discord.ext.commands import command, Cog
 from asyncpraw import Reddit
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client_id = os.getenv("REDDIT_APP_ID")
 client_secret = os.getenv("REDDIT_APP_SECRET")
