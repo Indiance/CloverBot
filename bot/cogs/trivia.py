@@ -1,5 +1,5 @@
 from discord import Embed
-from discord.ext.commands import command, Cog, cooldown, BucketType, CommandOnCooldown
+from discord.ext.commands import command, Cog
 import requests
 import html
 import random
@@ -15,7 +15,6 @@ class Trivia(Cog):
         self.bot = bot
 
     @command(name="trivia", pass_context=True, help="Play a game of trivia where you can choose the difficulty between easy difficult and hard")
-    @cooldown(1, 20, BucketType.user)
     async def trivia(self, ctx, difficulty: str = None):
         emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
         if difficulty is None:
@@ -42,20 +41,17 @@ class Trivia(Cog):
         msg = await ctx.send(embed=triviaEmbed)
         for i in range(len(answers)):
             await msg.add_reaction(emojis[i])
-
-        reaction = await self.bot.wait_for('reaction_add')
-        user_answer = answers[emojis.index(reaction[0].emoji)]
-        if user_answer == correct_answer:
+        def check(reaction, user):
+          return user == ctx.author
+        try:
+          reaction = await self.bot.wait_for('reaction_add', timeout=20.0, check=check)
+          user_answer = answers[emojis.index(reaction[0].emoji)]
+          if user_answer == correct_answer:
             await ctx.send("You got it right!")
-        else:
+          else:
             await ctx.send(f"You got it wrong! The correct answer was ***{correct_answer}***")
-
-
-
-    @trivia.error
-    async def trivia_error(self, ctx, err):
-        if isinstance(err, CommandOnCooldown):
-            await ctx.send(f"Oops that command is on cooldown for {err.retry_after:.0f} more seconds")
+        except TimeoutError:
+          await ctx.send("An answer was not sent in time")
 
 
 def setup(bot):
