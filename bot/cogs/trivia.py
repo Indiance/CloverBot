@@ -5,7 +5,8 @@ import html
 import random
 import os
 from dotenv import load_dotenv
-
+from discord_components import DiscordComponents, Button, ButtonStyle
+from asyncio import TimeoutError
 load_dotenv()
 
 key = os.getenv("QUIZ_TOKEN")
@@ -13,10 +14,13 @@ key = os.getenv("QUIZ_TOKEN")
 class Trivia(Cog):
     def __init__(self, bot):
         self.bot = bot
+    
+    @Cog.listener()
+    async def on_ready(self):
+        DiscordComponents(self.bot)
 
     @command(name="trivia", pass_context=True, help="Play a game of trivia where you can choose the difficulty between easy difficult and hard")
     async def trivia(self, ctx, difficulty: str = None):
-        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
         if difficulty is None:
             url = "https://opentdb.com/api.php?amount=1"
         else:
@@ -35,24 +39,30 @@ class Trivia(Cog):
         answers = incorrect_answers + [correct_answer]
         random.shuffle(answers)
         for thing in answers:
-            options += f"{emojis[answers.index(thing)]} {thing}\n"
+            options += f"{thing}\n"
         triviaEmbed.add_field(name="Question", value=question, inline=False)
         triviaEmbed.add_field(name="Options", value=options, inline=False)
-        msg = await ctx.send(embed=triviaEmbed)
-        for i in range(len(answers)):
-            await msg.add_reaction(emojis[i])
-        def check(reaction, user):
-          return user == ctx.author
+        msg = await ctx.send(
+             embed=triviaEmbed,
+             components=[[Button(style=ButtonStyle.blue, label=answer) for answer in answers]])
         try:
-          reaction = await self.bot.wait_for('reaction_add', timeout=20.0, check=check)
-          user_answer = answers[emojis.index(reaction[0].emoji)]
-          if user_answer == correct_answer:
-            await ctx.send("You got it right!")
-          else:
-            await ctx.send(f"You got it wrong! The correct answer was ***{correct_answer}***")
+             interaction = await self.bot.wait_for("button_click")
+             if interaction.component.label in incorrect_answers:
+                 await interaction.respond(type=6)
+                 await msg.edit(
+                     components=[[Button(style=ButtonStyle.green, label=ans) if ans == correct_answer else Button(
+                         style=ButtonStyle.red, label=ans) for ans in answers]]
+                 )
+                 await ctx.send("That was the wrong answer")
+             else:
+                 await interaction.respond(type=6)
+                 await msg.edit(
+                     components=[[Button(style=ButtonStyle.green, label=ans) if ans == correct_answer else Button(
+                         style=ButtonStyle.red, label=ans) for ans in answers]]
+                 )
+                 await ctx.send("That was the right answer")
         except TimeoutError:
-          await ctx.send("An answer was not sent in time")
-
+             await ctx.send("No answer received in time")
 
 def setup(bot):
     bot.add_cog(Trivia(bot))

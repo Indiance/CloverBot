@@ -1,6 +1,7 @@
 from discord.ext.commands import command, Cog
 from asyncio import TimeoutError
 from random import choice
+from discord_components import Button, ButtonStyle
 
 class Game(Cog):
     def __init__(self, bot):
@@ -12,19 +13,16 @@ class Game(Cog):
         paper = "📰"
         scissors = "✂️"
         rps = [rock, paper, scissors]
-        msg = await ctx.send('Pick your choice')
-        for reaction in rps:
-            await msg.add_reaction(reaction)
-
-        def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in rps
+        msg = await ctx.send('Pick your choice', components = [[Button(label=object) for object in rps]])
+        interaction = await self.bot.wait_for("button_click")
         try:
-            reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
-        except TimeoutError:
-            await ctx.send('A response was not given in time')
-        else:
+            reaction = interaction.component.label
+            await msg.edit(
+                     components=[[Button(style=ButtonStyle.blue, label=reaction) if object == reaction else Button(
+                         label=object) for object in rps]]
+                 )
+            await interaction.respond(type=6)
             oppn_choice = choice(rps)
-            reaction = str(reaction.emoji)
             if reaction == oppn_choice:
                 await ctx.send("You both drew")
             if oppn_choice == rock:
@@ -43,6 +41,8 @@ class Game(Cog):
                 if reaction == rock:
                     await ctx.send("You win!")
             await ctx.send(f"The opponent chose {oppn_choice}")
+        except TimeoutError:
+            await ctx.send("No response was sent in time")
 
 def setup(bot):
     bot.add_cog(Game(bot))

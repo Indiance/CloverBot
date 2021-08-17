@@ -170,5 +170,12 @@ class Miscellaneous(Cog):
             await ctx.send(embed=outputEmbed)
         else:
             await ctx.send("There was an error. Either you did not provide a language or the language does not exist")
+
+    @Cog.listener()
+    async def on_message(self, message):
+        if message.content == "@someone":
+            members = [m for m in message.guild.members]
+            await message.channel.send(f"{choice(members).mention} A random person has been pinged!")
+
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))
