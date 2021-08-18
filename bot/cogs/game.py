@@ -6,21 +6,21 @@ from discord_components import Button, ButtonStyle
 class Game(Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     @command(name="rps", pass_context=True, help="Play some rock paper scissors")
     async def rps(self, ctx):
         rock = "🪨"
         paper = "📰"
         scissors = "✂️"
         rps = [rock, paper, scissors]
-        msg = await ctx.send('Pick your choice', components = [[Button(label=object) for object in rps]])
-        interaction = await self.bot.wait_for("button_click")
+        msg = await ctx.send('Pick your choice', components=[[Button(label=object) for object in rps]])
+        interaction = await self.bot.wait_for("button_click", check = lambda i: i.user.id == ctx.author.id)
         try:
             reaction = interaction.component.label
             await msg.edit(
-                     components=[[Button(style=ButtonStyle.blue, label=reaction) if object == reaction else Button(
-                         label=object) for object in rps]]
-                 )
+                components=[[Button(style=ButtonStyle.green, label=reaction, disabled=True) if object == reaction else Button(
+                    label=object, disabled=True) for object in rps]]
+            )
             await interaction.respond(type=6)
             oppn_choice = choice(rps)
             if reaction == oppn_choice:
